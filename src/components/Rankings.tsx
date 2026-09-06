@@ -21,7 +21,7 @@ export default function Rankings({ characters, onLikeCharacter }: RankingsProps)
         <p className="text-slate-500 dark:text-stone-400 text-sm mb-4">
           Hiện tại tiệm chưa có bất kỳ nhân vật nào được tạo để tiến hành xếp hạng.
         </p>
-        <p className="text-xs text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/40 px-3 py-2 rounded-lg inline-block">
+        <p className="text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/40 px-3 py-2 rounded-lg inline-block">
           💡 Hãy bật Chế độ Quản trị viên để thêm nhân vật đầu tiên!
         </p>
       </div>
@@ -34,13 +34,13 @@ export default function Rankings({ characters, onLikeCharacter }: RankingsProps)
   // Re-order top3 as [2nd, 1st, 3rd] for visual podium display
   const podiumOrder = [];
   if (top3[1]) podiumOrder.push({ char: top3[1], rank: 2, height: "h-28", color: "bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-900/40", crown: "🥈" });
-  if (top3[0]) podiumOrder.push({ char: top3[0], rank: 1, height: "h-36", color: "bg-pink-50 dark:bg-pink-950/20 border-pink-300 dark:border-pink-900/60 border-2 shadow-md", crown: "👑" });
+  if (top3[0]) podiumOrder.push({ char: top3[0], rank: 1, height: "h-36", color: "bg-primary-50 dark:bg-primary-950/20 border-primary-300 dark:border-primary-900/60 border-2 shadow-md", crown: "👑" });
   if (top3[2]) podiumOrder.push({ char: top3[2], rank: 3, height: "h-24", color: "bg-slate-50 dark:bg-stone-900/20 border-slate-200 dark:border-stone-800/40", crown: "🥉" });
 
   return (
     <div className="max-w-3xl mx-auto py-6">
       <div className="text-center mb-10">
-        <span className="px-4 py-1.5 bg-pink-50 dark:bg-stone-900 text-pink-500 dark:text-pink-300 border border-pink-100 dark:border-stone-800 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 inline-block shadow-xs">
+        <span className="px-4 py-1.5 bg-primary-50 dark:bg-stone-900 text-primary-500 dark:text-primary-300 border border-primary-100 dark:border-stone-800 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 inline-block shadow-xs">
           Bảng Vàng Tiệm Wyn
         </span>
         <h2 className="text-3xl font-bold font-serif text-slate-800 dark:text-stone-100">
@@ -66,12 +66,12 @@ export default function Rankings({ characters, onLikeCharacter }: RankingsProps)
               <div className="relative mb-3 flex flex-col items-center">
                 <div className="text-2xl mb-1">{crown}</div>
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-md border-2 relative ${
-                  rank === 1 ? "bg-pink-50/50 border-pink-200" : rank === 2 ? "bg-sky-50/50 border-sky-200" : "bg-slate-50 border-slate-200"
+                  rank === 1 ? "bg-primary-50/50 border-primary-200" : rank === 2 ? "bg-sky-50/50 border-sky-200" : "bg-slate-50 border-slate-200"
                 }`}>
                   👤
                 </div>
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full text-white font-bold text-xs flex items-center justify-center border border-white dark:border-stone-900 shadow-xs ${
-                  rank === 1 ? "bg-pink-400" : rank === 2 ? "bg-sky-400" : "bg-slate-400"
+                  rank === 1 ? "bg-primary-400" : rank === 2 ? "bg-sky-400" : "bg-slate-400"
                 }`}>
                   {rank}
                 </div>
@@ -84,9 +84,9 @@ export default function Rankings({ characters, onLikeCharacter }: RankingsProps)
                 </h4>
                 <button
                   onClick={() => onLikeCharacter(char.id)}
-                  className="inline-flex items-center gap-1 mt-1 text-xs text-pink-500 hover:text-pink-600 font-bold bg-pink-50 dark:bg-pink-950/30 px-2 py-0.5 rounded-full transition cursor-pointer"
+                  className="inline-flex items-center gap-1 mt-1 text-xs text-primary-500 hover:text-primary-600 font-bold bg-primary-50 dark:bg-primary-950/30 px-2 py-0.5 rounded-full transition cursor-pointer"
                 >
-                  <Heart className="w-3 h-3 fill-pink-500" />
+                  <Heart className="w-3 h-3 fill-primary-500" />
                   {char.heartsCount}
                 </button>
               </div>
@@ -109,8 +109,8 @@ export default function Rankings({ characters, onLikeCharacter }: RankingsProps)
 
       {/* Leaderboard list for others */}
       {remaining.length > 0 && (
-        <div className="bg-white dark:bg-stone-900 border border-pink-100 dark:border-stone-800 rounded-3xl shadow-xs overflow-hidden">
-          <div className="px-6 py-4 border-b border-pink-100 dark:border-stone-800 bg-sky-50/20 dark:bg-stone-900 flex justify-between items-center">
+        <div className="bg-white dark:bg-stone-900 border border-primary-100 dark:border-stone-800 rounded-3xl shadow-xs overflow-hidden">
+          <div className="px-6 py-4 border-b border-primary-100 dark:border-stone-800 bg-sky-50/20 dark:bg-stone-900 flex justify-between items-center">
             <span className="text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300">
               Nhân vật tiếp theo
             </span>
@@ -119,11 +119,11 @@ export default function Rankings({ characters, onLikeCharacter }: RankingsProps)
             </span>
           </div>
 
-          <div className="divide-y divide-pink-50 dark:divide-stone-800">
+          <div className="divide-y divide-primary-50 dark:divide-stone-800">
             {remaining.map((char, index) => (
               <div
                 key={char.id}
-                className="px-6 py-3.5 flex items-center justify-between hover:bg-pink-50/10 dark:hover:bg-stone-800/30 transition duration-150"
+                className="px-6 py-3.5 flex items-center justify-between hover:bg-primary-50/10 dark:hover:bg-stone-800/30 transition duration-150"
               >
                 <div className="flex items-center gap-4">
                   {/* Rank Number */}
@@ -150,9 +150,9 @@ export default function Rankings({ characters, onLikeCharacter }: RankingsProps)
                 {/* Like Button & Count */}
                 <button
                   onClick={() => onLikeCharacter(char.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-50/50 dark:bg-pink-950/20 hover:bg-pink-100/60 dark:hover:bg-pink-950/40 text-pink-600 dark:text-pink-400 rounded-xl transition font-bold text-xs border border-pink-100/50 dark:border-pink-900/30 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50/50 dark:bg-primary-950/20 hover:bg-primary-100/60 dark:hover:bg-primary-950/40 text-primary-600 dark:text-primary-400 rounded-xl transition font-bold text-xs border border-primary-100/50 dark:border-primary-900/30 cursor-pointer"
                 >
-                  <Heart className="w-3.5 h-3.5 fill-pink-500" />
+                  <Heart className="w-3.5 h-3.5 fill-primary-500" />
                   {char.heartsCount}
                 </button>
               </div>

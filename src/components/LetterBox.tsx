@@ -9,7 +9,7 @@ interface LetterBoxProps {
 }
 
 const THEMES = [
-  { id: "pink", name: "Hồng Ngọt Ngào", bg: "bg-pink-50 border-pink-200 text-pink-800", dot: "bg-pink-400", cardBg: "bg-pink-100/70 dark:bg-pink-950/20", text: "text-pink-900 dark:text-pink-100" },
+  { id: "pink", name: "Hồng Ngọt Ngào", bg: "bg-primary-50 border-primary-200 text-primary-800", dot: "bg-primary-400", cardBg: "bg-primary-100/70 dark:bg-primary-950/20", text: "text-primary-900 dark:text-primary-100" },
   { id: "blue", name: "Xanh Mơ Mộng", bg: "bg-sky-50 border-sky-200 text-sky-800", dot: "bg-sky-400", cardBg: "bg-sky-100/70 dark:bg-sky-950/20", text: "text-sky-900 dark:text-sky-100" },
   { id: "green", name: "Bạc Hà Tươi Mát", bg: "bg-teal-50 border-teal-200 text-teal-800", dot: "bg-teal-400", cardBg: "bg-teal-100/70 dark:bg-teal-950/20", text: "text-teal-900 dark:text-teal-100" },
   { id: "yellow", name: "Nắng Ban Mai", bg: "bg-amber-50 border-amber-200 text-amber-800", dot: "bg-amber-400", cardBg: "bg-amber-100/70 dark:bg-amber-950/20", text: "text-amber-900 dark:text-amber-100" },
@@ -46,7 +46,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
   return (
     <div className="max-w-4xl mx-auto py-6">
       <div className="text-center mb-10">
-        <span className="px-4 py-1.5 bg-pink-50 dark:bg-stone-900 text-pink-500 dark:text-pink-300 border border-pink-100 dark:border-stone-800 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 inline-block shadow-xs">
+        <span className="px-4 py-1.5 bg-primary-50 dark:bg-stone-900 text-primary-500 dark:text-primary-300 border border-primary-100 dark:border-stone-800 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 inline-block shadow-xs">
           Góc Chia Sẻ & Bình Luận
         </span>
         <h2 className="text-3xl font-bold font-serif text-slate-800 dark:text-stone-100">
@@ -59,9 +59,9 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         {/* Form to Write Letter */}
-        <div className="md:col-span-5 bg-pink-50/15 dark:bg-stone-900 border border-pink-100 dark:border-stone-800 rounded-3xl p-6 shadow-md relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-pink-50 dark:bg-pink-950/20 rounded-bl-full flex items-center justify-center">
-            <span className="text-xl -mt-4 -mr-4 text-pink-500">✏️</span>
+        <div className="md:col-span-5 bg-primary-50/15 dark:bg-stone-900 border border-primary-100 dark:border-stone-800 rounded-3xl p-6 shadow-md relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-primary-50 dark:bg-primary-950/20 rounded-bl-full flex items-center justify-center">
+            <span className="text-xl -mt-4 -mr-4 text-primary-500">✏️</span>
           </div>
 
           <h3 className="text-lg font-bold font-serif text-slate-850 dark:text-stone-200 mb-4 flex items-center gap-1.5">
@@ -80,7 +80,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 maxLength={30}
-                className="w-full px-3 py-2 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-300 transition"
+                className="w-full px-3 py-2 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition"
               />
             </div>
 
@@ -95,7 +95,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
                 maxLength={400}
                 rows={4}
                 required
-                className="w-full px-3 py-2 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-300 transition resize-none custom-scrollbar"
+                className="w-full px-3 py-2 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition resize-none custom-scrollbar"
               />
             </div>
 
@@ -111,7 +111,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
                     type="button"
                     onClick={() => setSelectedTheme(theme.id)}
                     className={`w-8 h-8 rounded-full border-2 ${theme.bg} flex items-center justify-center transition transform hover:scale-110 cursor-pointer ${
-                      selectedTheme === theme.id ? "ring-2 ring-pink-400 dark:ring-white ring-offset-2 dark:ring-offset-stone-900 scale-105" : "border-transparent"
+                      selectedTheme === theme.id ? "ring-2 ring-primary-400 dark:ring-white ring-offset-2 dark:ring-offset-stone-900 scale-105" : "border-transparent"
                     }`}
                     title={theme.name}
                   >
@@ -124,7 +124,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
             <button
               type="submit"
               disabled={isSubmitting || !content.trim()}
-              className="w-full py-2.5 bg-pink-400 hover:bg-pink-500 disabled:opacity-50 text-white font-bold rounded-2xl shadow-sm transition cursor-pointer flex items-center justify-center gap-2 text-sm"
+              className="w-full py-2.5 bg-primary-400 hover:bg-primary-500 disabled:opacity-50 text-white font-bold rounded-2xl shadow-sm transition cursor-pointer flex items-center justify-center gap-2 text-sm"
               id="btn-send-letter"
             >
               <Send className="w-4 h-4" />
@@ -141,7 +141,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
           </h3>
 
           {letters.length === 0 ? (
-            <div className="p-12 text-center bg-pink-50/15 dark:bg-stone-900 border border-pink-100 dark:border-stone-800 rounded-3xl">
+            <div className="p-12 text-center bg-primary-50/15 dark:bg-stone-900 border border-primary-100 dark:border-stone-800 rounded-3xl">
               <span className="text-4xl block mb-3 animate-pulse">✉️</span>
               <p className="text-slate-500 dark:text-stone-400 text-sm italic">
                 Hòm thư hiện đang trống trơn. Hãy là người đầu tiên viết một phong thư ngọt ngào gửi tới tiệm nhé!
@@ -156,7 +156,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
                     key={letter.id}
                     layoutId={`letter-card-${letter.id}`}
                     onClick={() => setActiveLetter(letter)}
-                    className={`p-5 rounded-2xl border border-pink-100/40 dark:border-stone-800 cursor-pointer hover:shadow-md transition transform hover:-translate-y-0.5 relative overflow-hidden group ${details.cardBg}`}
+                    className={`p-5 rounded-2xl border border-primary-100/40 dark:border-stone-800 cursor-pointer hover:shadow-md transition transform hover:-translate-y-0.5 relative overflow-hidden group ${details.cardBg}`}
                     whileHover={{ scale: 1.02 }}
                   >
                     {/* Tiny envelope flap visual */}
@@ -174,12 +174,18 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
                       </span>
                     </div>
 
-                    <p className="text-slate-700 dark:text-stone-200 text-sm line-clamp-3 leading-relaxed break-words font-serif">
+                    <p className="text-slate-700 dark:text-stone-200 text-sm line-clamp-3 leading-relaxed break-words font-serif mb-2">
                       {letter.content}
                     </p>
 
+                    {letter.adminReply && (
+                      <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-100/50 dark:bg-primary-950/40 px-2 py-0.5 rounded-md inline-block">
+                        👑 Đã có phản hồi
+                      </span>
+                    )}
+
                     {/* Wax seal simulation */}
-                    <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-pink-400/90 dark:bg-red-650/70 border border-white flex items-center justify-center text-[10px] text-white shadow-sm font-serif">
+                    <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-primary-400/90 dark:bg-red-650/70 border border-white flex items-center justify-center text-[10px] text-white shadow-sm font-serif">
                       ❤
                     </div>
                   </motion.div>
@@ -198,7 +204,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
               initial={{ opacity: 0, scale: 0.9, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 30 }}
-              className="relative w-full max-w-lg bg-white dark:bg-stone-900 border border-pink-100 dark:border-stone-800 rounded-3xl shadow-2xl p-6 overflow-hidden"
+              className="relative w-full max-w-lg bg-white dark:bg-stone-900 border border-primary-100 dark:border-stone-800 rounded-3xl shadow-2xl p-6 overflow-hidden"
               layoutId={`letter-card-${activeLetter.id}`}
             >
               <button
@@ -210,7 +216,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
               </button>
 
               {/* Decorative Envelope Header */}
-              <div className="flex items-center gap-2 pb-3 border-b border-pink-100 dark:border-stone-800 mb-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-primary-100 dark:border-stone-800 mb-4">
                 <span className="text-2xl">✉️</span>
                 <div>
                   <h4 className="text-sm font-bold text-slate-850 dark:text-stone-100 font-serif">
@@ -228,7 +234,7 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
 
               {/* Styled letter paper body */}
               <div
-                className={`p-6 rounded-2xl border border-pink-100/30 min-h-[160px] relative overflow-hidden ${
+                className={`p-6 rounded-2xl border border-primary-100/30 min-h-[160px] relative overflow-hidden ${
                   getThemeDetails(activeLetter.theme).cardBg
                 }`}
               >
@@ -238,13 +244,25 @@ export default function LetterBox({ letters, onSendLetter }: LetterBoxProps) {
                 <p className="text-slate-800 dark:text-stone-100 text-sm leading-8 font-serif whitespace-pre-wrap relative z-10 break-words">
                   {activeLetter.content}
                 </p>
+                
+                {activeLetter.adminReply && (
+                  <div className="mt-6 pt-4 border-t border-dashed border-slate-300 dark:border-stone-700 relative z-10">
+                    <span className="text-xs font-bold text-primary-600 dark:text-primary-400 mb-1 block flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      Phản hồi từ Admin:
+                    </span>
+                    <p className="text-sm text-slate-700 dark:text-stone-300 italic font-serif leading-relaxed">
+                      {activeLetter.adminReply}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex justify-end items-center gap-2">
                 <span className="text-xs text-slate-450 italic">
                   Cảm ơn bạn đã nhắn gửi lời vàng ngọc! ✨
                 </span>
-                <div className="w-8 h-8 rounded-full bg-pink-400 flex items-center justify-center text-sm text-white font-serif shadow-md select-none">
+                <div className="w-8 h-8 rounded-full bg-primary-400 flex items-center justify-center text-sm text-white font-serif shadow-md select-none">
                   ❤
                 </div>
               </div>

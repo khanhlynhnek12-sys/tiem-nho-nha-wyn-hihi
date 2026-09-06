@@ -11,10 +11,16 @@ import GachaWheel from "./components/GachaWheel";
 import LetterBox from "./components/LetterBox";
 import GenreCloud from "./components/GenreCloud";
 import AdminPanel from "./components/AdminPanel";
-import { Award, RotateCw, Mail, FolderOpen, UserCheck, Moon, Sun, Shield, ShieldCheck, Sparkles, Bell, X } from "lucide-react";
+import EmotionTree from "./components/EmotionTree";
+import LanternSky from "./components/LanternSky";
+import WeatherEffects, { WeatherMode } from "./components/WeatherEffects";
+import DailyTarot from "./components/DailyTarot";
+import TimeCapsule from "./components/TimeCapsule";
+import TriviaQuiz from "./components/TriviaQuiz";
+import { Award, RotateCw, Mail, FolderOpen, UserCheck, Moon, Sun, Shield, ShieldCheck, Sparkles, Bell, X, Palette, Star, CloudRain, HelpCircle, Hourglass, Smile } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-type ActiveTab = "characters" | "rankings" | "gacha" | "letters" | "genres" | "admin";
+type ActiveTab = "characters" | "rankings" | "gacha" | "letters" | "genres" | "lanterns" | "tarot" | "timecapsule" | "quiz" | "admin";
 
 export default function App() {
   const [isUnlocked, setIsUnlocked] = useState(() => {
@@ -42,6 +48,20 @@ export default function App() {
     return false;
   });
 
+  const [moodTheme, setMoodTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("wyn_mood") || "sweet";
+    }
+    return "sweet";
+  });
+
+  const [weather, setWeather] = useState<WeatherMode>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("wyn_weather") as WeatherMode) || "none";
+    }
+    return "none";
+  });
+
   // Main application data
   const [characters, setCharacters] = useState<Character[]>([]);
   const [letters, setLetters] = useState<Letter[]>([]);
@@ -52,6 +72,19 @@ export default function App() {
 
   // Active toast notification
   const [toast, setToast] = useState<{ id: string; message: string } | null>(null);
+
+  // Points system
+  const [points, setPoints] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("wyn_points");
+      return saved !== null ? parseInt(saved, 10) : 500;
+    }
+    return 500;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("wyn_points", points.toString());
+  }, [points]);
 
   // Keep track of characters we already know about to avoid double-toasting
   const knownCharIds = useRef<Set<string>>(new Set());
@@ -88,6 +121,25 @@ export default function App() {
       localStorage.setItem("wyn_theme", "light");
     }
   }, [darkMode]);
+
+  // Sync mood theme
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.setAttribute("data-mood", moodTheme);
+    localStorage.setItem("wyn_mood", moodTheme);
+  }, [moodTheme]);
+
+  // Listen to custom point and water events
+  useEffect(() => {
+    const handleAddPoints = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.amount === "number") {
+        setPoints(prev => prev + customEvent.detail.amount);
+      }
+    };
+    window.addEventListener("add-points", handleAddPoints);
+    return () => window.removeEventListener("add-points", handleAddPoints);
+  }, []);
 
   // Fetch full data from Firebase
   useEffect(() => {
@@ -185,6 +237,37 @@ export default function App() {
     }
   };
 
+  const handleMoodToggle = () => {
+    const moods = ["sweet", "dark-love", "healing"];
+    const currentIndex = moods.indexOf(moodTheme);
+    const nextMood = moods[(currentIndex + 1) % moods.length];
+    setMoodTheme(nextMood);
+    
+    let moodName = "";
+    if (nextMood === "sweet") moodName = "Ngọt ngào (Hồng)";
+    if (nextMood === "dark-love") moodName = "Hắc ám (Đỏ thẫm)";
+    if (nextMood === "healing") moodName = "Chữa lành (Xanh ngọc)";
+    
+    setToast({ id: "mood", message: `Đã đổi giao diện sang: ${moodName}` });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleWeatherToggle = () => {
+    const weathers: WeatherMode[] = ["none", "snow", "rain", "leaves"];
+    const currentIndex = weathers.indexOf(weather);
+    const nextWeather = weathers[(currentIndex + 1) % weathers.length];
+    setWeather(nextWeather);
+    localStorage.setItem("wyn_weather", nextWeather);
+
+    let weatherName = "Trời quang";
+    if (nextWeather === "snow") weatherName = "Tuyết rơi ❄️";
+    if (nextWeather === "rain") weatherName = "Mưa bay 🌧️";
+    if (nextWeather === "leaves") weatherName = "Lá rụng 🍂";
+
+    setToast({ id: "weather", message: `Đã đổi thời tiết sang: ${weatherName}` });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   // Like character handler
   const handleLikeCharacter = async (id: string) => {
     try {
@@ -198,6 +281,9 @@ export default function App() {
         setFavorites(newFavs);
         localStorage.setItem("wyn_favorites", JSON.stringify(newFavs));
       }
+      
+      // Trigger emotion tree growth
+      window.dispatchEvent(new CustomEvent("water-tree"));
     } catch (err) {
       console.error("Error liking character:", err);
     }
@@ -224,6 +310,9 @@ export default function App() {
         theme,
         createdAt: new Date().toISOString()
       });
+      
+      // Trigger emotion tree growth
+      window.dispatchEvent(new CustomEvent("water-tree"));
     } catch (err) {
       console.error("Error sending letter:", err);
     }
@@ -251,13 +340,69 @@ export default function App() {
     }
   };
 
+  const handleResetCharacterHearts = async (id: string) => {
+    try {
+      await updateDoc(doc(db, "characters", id), { heartsCount: 0 });
+    } catch (err) {
+      console.error("Error resetting character hearts:", err);
+    }
+  };
+
+  const handleResetAllCharacterHearts = async () => {
+    try {
+      const promises = characters.map(char => 
+        updateDoc(doc(db, "characters", char.id), { heartsCount: 0 })
+      );
+      await Promise.all(promises);
+      setToast({ id: "reset-all", message: "Đã reset toàn bộ độ thân mật về 0." });
+      setTimeout(() => setToast(null), 4000);
+    } catch (err) {
+      console.error("Error resetting all character hearts:", err);
+    }
+  };
+
+  const handleReplyLetter = async (id: string, reply: string) => {
+    try {
+      await updateDoc(doc(db, "letters", id), { adminReply: reply });
+    } catch (err) {
+      console.error("Error replying to letter:", err);
+    }
+  };
+
+  const handleGiftCharacter = async (id: string, cost: number, hearts: number, giftName: string) => {
+    if (points < cost) {
+      setToast({ id: "no-points", message: `Bạn không đủ điểm! Cần ${cost} điểm thưởng để tặng ${giftName}.` });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+
+    try {
+      setPoints((prev) => prev - cost);
+      const charRef = doc(db, "characters", id);
+      await updateDoc(charRef, {
+        heartsCount: increment(hearts)
+      });
+      setToast({ id: "gift-success", message: `Tặng ${giftName} thành công! Độ thân mật tăng thêm ${hearts} 💖` });
+      setTimeout(() => setToast(null), 4000);
+    } catch (err) {
+      console.error("Error gifting character:", err);
+    }
+  };
+
+  const handleClaimDailyPoints = () => {
+    setPoints(prev => prev + 100);
+    setToast({ id: "daily-points", message: `Nhận thành công 100 điểm thưởng!` });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   // Unlocked screen is gated
   if (!isUnlocked) {
     return <PasswordGate onUnlock={handleUnlock} />;
   }
 
   return (
-    <div className="min-h-screen w-full bg-stone-50 dark:bg-stone-950 transition-colors duration-300 relative flex flex-col text-stone-800 dark:text-stone-200">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-primary-100 to-sky-100 dark:from-blue-950 dark:via-primary-950 dark:to-sky-950 transition-colors duration-300 relative flex flex-col text-stone-800 dark:text-stone-200">
+      <WeatherEffects mode={weather} />
       {/* Floating Popsicles Drift Background */}
       <FloatingIceCreams />
 
@@ -288,14 +433,14 @@ export default function App() {
       </AnimatePresence>
 
       {/* Header section */}
-      <header className="relative z-10 w-full bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm border-b border-pink-100 dark:border-stone-800 py-5 px-6">
+      <header className="relative z-10 w-full bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm border-b border-primary-100 dark:border-stone-800 py-5 px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-3xl">🍦</span>
             <div>
-              <h1 className="text-3xl font-serif italic text-pink-400 tracking-tight flex items-center gap-1.5">
+              <h1 className="text-3xl font-serif italic text-primary-400 tracking-tight flex items-center gap-1.5">
                 Tiệm Nhỏ Nhà Wyn
-                <Sparkles className="w-4 h-4 text-pink-400 fill-pink-300 animate-pulse" />
+                <Sparkles className="w-4 h-4 text-primary-400 fill-primary-300 animate-pulse" />
               </h1>
               <p className="text-xs uppercase tracking-widest text-sky-450 mt-1">
                 Nơi những tâm hồn đồng điệu tìm thấy nhau
@@ -304,13 +449,41 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* Points display */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-full cursor-pointer hover:bg-amber-100 transition" onClick={handleClaimDailyPoints} title="Nhận thêm điểm">
+              <span className="text-sm">💎</span>
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-500">{points} điểm</span>
+            </div>
+
             {/* YouTube Audio Player */}
             <AudioPlayer />
+
+            {/* Mood Theme Toggle */}
+            <button
+              onClick={handleMoodToggle}
+              className="p-2.5 rounded-full bg-slate-50 hover:bg-primary-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-primary-500 border border-slate-200 dark:border-stone-700 transition cursor-pointer flex items-center justify-center"
+              title="Đổi giao diện cảm xúc"
+            >
+              <Palette className="w-4 h-4" />
+            </button>
+
+            {/* Weather Mode Toggle */}
+            <button
+              onClick={handleWeatherToggle}
+              className={`p-2.5 rounded-full border transition cursor-pointer flex items-center justify-center ${
+                weather !== "none" 
+                  ? "bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 border-sky-200 dark:border-sky-800"
+                  : "bg-slate-50 hover:bg-primary-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-500 dark:text-stone-400 border-slate-200 dark:border-stone-700"
+              }`}
+              title="Đổi thời tiết (Tuyết/Mưa/Lá rơi)"
+            >
+              <CloudRain className="w-4 h-4" />
+            </button>
 
             {/* Dark/Light mode toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2.5 rounded-full bg-slate-50 hover:bg-pink-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 border border-slate-200 dark:border-stone-700 transition cursor-pointer"
+              className="p-2.5 rounded-full bg-slate-50 hover:bg-primary-50 dark:bg-stone-800 dark:hover:bg-stone-700 text-slate-700 dark:text-stone-300 border border-slate-200 dark:border-stone-700 transition cursor-pointer"
               title={darkMode ? "Bật chế độ sáng" : "Bật chế độ tối"}
               id="btn-toggle-theme"
             >
@@ -322,12 +495,12 @@ export default function App() {
               onClick={handleAdminToggle}
               className={`px-4 py-2 text-xs rounded-full font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                 isAdmin
-                  ? "bg-pink-100 border-pink-200 text-pink-700 dark:bg-pink-950/40 dark:border-pink-900/60 dark:text-pink-400"
+                  ? "bg-primary-100 border-primary-200 text-primary-700 dark:bg-primary-950/40 dark:border-primary-900/60 dark:text-primary-400"
                   : "bg-sky-50 border-sky-100 text-sky-700 hover:bg-sky-100 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-700"
               }`}
               id="btn-toggle-admin"
             >
-              {isAdmin ? <ShieldCheck className="w-4 h-4 text-pink-500" /> : <Shield className="w-4 h-4" />}
+              {isAdmin ? <ShieldCheck className="w-4 h-4 text-primary-500" /> : <Shield className="w-4 h-4" />}
               {isAdmin ? "Admin: Bật" : "Quản Trị"}
             </button>
           </div>
@@ -347,21 +520,21 @@ export default function App() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 gap-4">
             {/* Item 1: BXH (Rankings) */}
             <motion.div
               whileHover={{ y: -4, scale: 1.02 }}
               onClick={() => setActiveTab("rankings")}
               className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
                 activeTab === "rankings"
-                  ? "bg-pink-400 border-pink-400 text-white shadow-md"
-                  : "bg-pink-50/40 dark:bg-stone-900 border-pink-100/60 dark:border-stone-800 text-pink-600 dark:text-pink-350 hover:border-pink-300"
+                  ? "bg-primary-400 border-primary-400 text-white shadow-md"
+                  : "bg-primary-50/40 dark:bg-stone-900 border-primary-100/60 dark:border-stone-800 text-primary-600 dark:text-primary-350 hover:border-primary-300"
               }`}
             >
               <div className="text-3xl mb-4">🏆</div>
               <div>
-                <h3 className="font-bold text-sm sm:text-base font-serif">Bảng Xếp Hạng</h3>
-                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Bình chọn được yêu thích nhiều nhất</p>
+                <h3 className="font-bold text-sm font-serif">Bảng Xếp Hạng</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Độ thân mật cao nhất</p>
               </div>
               <div className="absolute -right-4 -bottom-4 text-7xl opacity-5 font-serif italic pointer-events-none select-none">01</div>
             </motion.div>
@@ -378,8 +551,8 @@ export default function App() {
             >
               <div className="text-3xl mb-4">✨</div>
               <div>
-                <h3 className="font-bold text-sm sm:text-base font-serif">Quay Gacha</h3>
-                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Tìm kiếm nhân duyên ngẫu nhiên</p>
+                <h3 className="font-bold text-sm font-serif">Quay Gacha</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Tìm nhân duyên</p>
               </div>
               <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">🎡</div>
             </motion.div>
@@ -390,14 +563,14 @@ export default function App() {
               onClick={() => setActiveTab("letters")}
               className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
                 activeTab === "letters"
-                  ? "bg-pink-500 border-pink-500 text-white shadow-md"
-                  : "bg-pink-100/30 dark:bg-stone-900 border-pink-200/50 dark:border-stone-800 text-pink-700 dark:text-pink-300 hover:border-pink-450"
+                  ? "bg-primary-500 border-primary-500 text-white shadow-md"
+                  : "bg-primary-100/30 dark:bg-stone-900 border-primary-200/50 dark:border-stone-800 text-primary-700 dark:text-primary-300 hover:border-primary-450"
               }`}
             >
               <div className="text-3xl mb-4">✉️</div>
               <div>
-                <h3 className="font-bold text-sm sm:text-base font-serif">Nơi Gửi Thư</h3>
-                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Bình luận, thảo luận đẹp mắt</p>
+                <h3 className="font-bold text-sm font-serif">Nơi Gửi Thư</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Thảo luận đẹp mắt</p>
               </div>
               <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">📬</div>
             </motion.div>
@@ -414,8 +587,8 @@ export default function App() {
             >
               <div className="text-3xl mb-4">🏷️</div>
               <div>
-                <h3 className="font-bold text-sm sm:text-base font-serif">Thể Loại</h3>
-                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Phân loại nhãn đa dạng</p>
+                <h3 className="font-bold text-sm font-serif">Thể Loại</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Phân loại nhãn</p>
               </div>
               <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">🏷️</div>
             </motion.div>
@@ -424,18 +597,90 @@ export default function App() {
             <motion.div
               whileHover={{ y: -4, scale: 1.02 }}
               onClick={() => setActiveTab("characters")}
-              className={`col-span-2 md:col-span-1 p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
+              className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
                 activeTab === "characters"
                   ? "bg-slate-700 dark:bg-stone-300 border-slate-700 dark:border-stone-350 text-white dark:text-stone-950 shadow-md"
-                  : "bg-slate-50 dark:bg-stone-900 border-slate-200 dark:border-stone-800 text-slate-600 dark:text-stone-300 hover:border-pink-300"
+                  : "bg-slate-50 dark:bg-stone-900 border-slate-200 dark:border-stone-800 text-slate-600 dark:text-stone-300 hover:border-primary-300"
               }`}
             >
               <div className="text-3xl mb-4">👤</div>
               <div>
-                <h3 className="font-bold text-sm sm:text-base font-serif">Thẻ Nhân Vật</h3>
-                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Xem hồ sơ và liên kết chat</p>
+                <h3 className="font-bold text-sm font-serif">Thẻ Nhân Vật</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Hồ sơ & Cổng chat</p>
               </div>
               <div className="absolute -right-4 -top-4 text-7xl opacity-5 pointer-events-none select-none">🎴</div>
+            </motion.div>
+
+            {/* Item 6: ĐÈN LỒNG (Lanterns) */}
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              onClick={() => setActiveTab("lanterns")}
+              className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
+                activeTab === "lanterns"
+                  ? "bg-amber-600 dark:bg-amber-500 border-amber-600 text-white shadow-md"
+                  : "bg-amber-50 dark:bg-stone-900 border-amber-200/60 dark:border-stone-800 text-amber-700 dark:text-amber-300 hover:border-amber-400"
+              }`}
+            >
+              <div className="text-3xl mb-4">🏮</div>
+              <div>
+                <h3 className="font-bold text-sm font-serif">Đèn Lồng</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Ước nguyện</p>
+              </div>
+              <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">🏮</div>
+            </motion.div>
+
+            {/* Item 7: BÓI BÀI (Tarot) */}
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              onClick={() => setActiveTab("tarot")}
+              className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
+                activeTab === "tarot"
+                  ? "bg-indigo-600 dark:bg-indigo-500 border-indigo-600 text-white shadow-md"
+                  : "bg-indigo-50 dark:bg-stone-900 border-indigo-200/60 dark:border-stone-800 text-indigo-700 dark:text-indigo-300 hover:border-indigo-400"
+              }`}
+            >
+              <div className="text-3xl mb-4">🔮</div>
+              <div>
+                <h3 className="font-bold text-sm font-serif">Bói Bài</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Thông điệp ngày</p>
+              </div>
+              <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">🔮</div>
+            </motion.div>
+
+            {/* Item 8: HỘP THƯ THỜI GIAN (Time Capsule) */}
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              onClick={() => setActiveTab("timecapsule")}
+              className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
+                activeTab === "timecapsule"
+                  ? "bg-teal-600 dark:bg-teal-500 border-teal-600 text-white shadow-md"
+                  : "bg-teal-50 dark:bg-stone-900 border-teal-200/60 dark:border-stone-800 text-teal-700 dark:text-teal-300 hover:border-teal-400"
+              }`}
+            >
+              <div className="text-3xl mb-4">⏳</div>
+              <div>
+                <h3 className="font-bold text-sm font-serif">Hộp Thư</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Gửi tương lai</p>
+              </div>
+              <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">⏳</div>
+            </motion.div>
+
+            {/* Item 9: ĐỐ VUI (Quiz) */}
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              onClick={() => setActiveTab("quiz")}
+              className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
+                activeTab === "quiz"
+                  ? "bg-rose-600 dark:bg-rose-500 border-rose-600 text-white shadow-md"
+                  : "bg-rose-50 dark:bg-stone-900 border-rose-200/60 dark:border-stone-800 text-rose-700 dark:text-rose-300 hover:border-rose-400"
+              }`}
+            >
+              <div className="text-3xl mb-4">🧩</div>
+              <div>
+                <h3 className="font-bold text-sm font-serif">Đố Vui</h3>
+                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Nhận điểm thưởng</p>
+              </div>
+              <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">🧩</div>
             </motion.div>
           </div>
         </section>
@@ -443,6 +688,86 @@ export default function App() {
         {/* Unlocked tab content space */}
         <section className="bg-white/40 dark:bg-stone-900/10 rounded-3xl p-2 sm:p-6 border border-[#E9E5D9] dark:border-[#524B44] shadow-xs">
           <AnimatePresence mode="wait">
+            {activeTab === "tarot" && (
+              <motion.div
+                key="tab-tarot"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="mb-4 border-b border-stone-100 dark:border-stone-800 pb-3 px-1">
+                  <h3 className="text-xl font-bold font-serif text-stone-800 dark:text-stone-100">
+                    Bói Bài Chiêm Tinh Hằng Ngày
+                  </h3>
+                  <p className="text-xs text-stone-400 dark:text-stone-500">
+                    Rút thẻ bài may mắn nhận thông điệp chữa lành từ các nhân vật và nhận thêm đá quý
+                  </p>
+                </div>
+                <DailyTarot />
+              </motion.div>
+            )}
+
+            {activeTab === "timecapsule" && (
+              <motion.div
+                key="tab-timecapsule"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="mb-4 border-b border-stone-100 dark:border-stone-800 pb-3 px-1">
+                  <h3 className="text-xl font-bold font-serif text-stone-800 dark:text-stone-100">
+                    Hộp Thư Thời Gian
+                  </h3>
+                  <p className="text-xs text-stone-400 dark:text-stone-500">
+                    Cất giấu những dòng cảm xúc tâm sự gửi cho tương lai của chính mình
+                  </p>
+                </div>
+                <TimeCapsule />
+              </motion.div>
+            )}
+
+            {activeTab === "quiz" && (
+              <motion.div
+                key="tab-quiz"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="mb-4 border-b border-stone-100 dark:border-stone-800 pb-3 px-1">
+                  <h3 className="text-xl font-bold font-serif text-stone-800 dark:text-stone-100">
+                    Thử Thách Đố Vui
+                  </h3>
+                  <p className="text-xs text-stone-400 dark:text-stone-500">
+                    Trải nghiệm đố vui kiến thức siêu đáng yêu về tiệm nhỏ để nhận điểm thưởng đá quý
+                  </p>
+                </div>
+                <TriviaQuiz />
+              </motion.div>
+            )}
+
+            {activeTab === "lanterns" && (
+              <motion.div
+                key="tab-lanterns"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="mb-4 border-b border-stone-100 dark:border-stone-800 pb-3 px-1">
+                  <h3 className="text-xl font-bold font-serif text-stone-800 dark:text-stone-100">
+                    Bầu Trời Đèn Lồng
+                  </h3>
+                  <p className="text-xs text-stone-400 dark:text-stone-500">
+                    Nơi gửi gắm những tâm sự và điều ước của độc giả Tiệm Nhỏ Nhà Wyn
+                  </p>
+                </div>
+                <LanternSky />
+              </motion.div>
+            )}
+
             {activeTab === "characters" && (
               <motion.div
                 key="tab-chars"
@@ -476,8 +801,10 @@ export default function App() {
                   favorites={favorites}
                   onToggleFavorite={handleToggleFavorite}
                   onLikeCharacter={handleLikeCharacter}
+                  onGiftCharacter={handleGiftCharacter}
                   selectedCategory={selectedCategory}
                   onSelectCategory={setSelectedCategory}
+                  points={points}
                 />
               </motion.div>
             )}
@@ -545,8 +872,12 @@ export default function App() {
               >
                 <AdminPanel
                   characters={characters}
+                  letters={letters}
                   onCreateCharacter={handleCreateCharacter}
                   onDeleteCharacter={handleDeleteCharacter}
+                  onReplyLetter={handleReplyLetter}
+                  onResetCharacterHearts={handleResetCharacterHearts}
+                  onResetAllCharacterHearts={handleResetAllCharacterHearts}
                 />
               </motion.div>
             )}
@@ -597,7 +928,7 @@ export default function App() {
                   placeholder="Nhập mật khẩu quản trị..."
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-stone-800/40 border-2 border-pink-100 dark:border-stone-700 focus:border-pink-300 dark:focus:border-pink-500 rounded-2xl text-center font-mono focus:outline-none transition text-slate-800 dark:text-white tracking-widest text-lg shadow-inner"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-stone-800/40 border-2 border-primary-100 dark:border-stone-700 focus:border-primary-300 dark:focus:border-primary-500 rounded-2xl text-center font-mono focus:outline-none transition text-slate-800 dark:text-white tracking-widest text-lg shadow-inner"
                   autoFocus
                   id="admin-password-input"
                 />
@@ -610,7 +941,7 @@ export default function App() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-pink-400 hover:bg-pink-500 text-white font-bold rounded-2xl text-sm shadow-md transition cursor-pointer"
+                  className="w-full py-3 bg-primary-400 hover:bg-primary-500 text-white font-bold rounded-2xl text-sm shadow-md transition cursor-pointer"
                   id="btn-admin-submit"
                 >
                   Xác Nhận Quyền Admin
@@ -620,6 +951,7 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+      <EmotionTree />
     </div>
   );
 }

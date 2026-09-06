@@ -12,7 +12,7 @@ interface SweetItem {
   yOffset: number;
 }
 
-const EMOJIS = ["🍦", "🍧", "🍨", "🍭", "🍩", "🍬", "🍫", "🧁", "🍰", "🍪", "🍡", "🍧", "🍮", "🍯"];
+const EMOJIS = ["🍓"];
 
 export default function FloatingIceCreams() {
   const [items, setItems] = useState<SweetItem[]>([]);
@@ -24,10 +24,10 @@ export default function FloatingIceCreams() {
       emoji: EMOJIS[i % EMOJIS.length],
       x: Math.random() * 100, // percentage width
       y: Math.random() * 100, // percentage height
-      size: Math.random() * 24 + 16, // size in pixels (16px to 40px)
-      duration: Math.random() * 12 + 12, // duration in seconds (12s to 24s)
+      size: Math.random() * 20 + 20, // size in pixels (20px to 40px)
+      duration: Math.random() * 10 + 10, // duration in seconds (10s to 20s)
       delay: Math.random() * -20, // negative delay so they start out of sync immediately
-      yOffset: Math.random() * 300 + 200 // large vertical movement (200px to 500px)
+      yOffset: Math.random() * 200 + 150 // vertical movement (150px to 350px)
     }));
     setItems(newItems);
   }, []);
@@ -45,8 +45,8 @@ export default function FloatingIceCreams() {
           }}
           animate={{
             y: [0, -item.yOffset, 0, item.yOffset, 0],
-            x: [0, 40, 0, -40, 0],
-            rotate: [0, 35, 0, -35, 0],
+            x: [0, 20, 0, -20, 0],
+            rotate: [0, 15, -5, 15, 0],
           }}
           transition={{
             duration: item.duration,

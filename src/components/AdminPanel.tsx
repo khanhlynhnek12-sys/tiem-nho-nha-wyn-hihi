@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { Character } from "../types";
-import { Plus, Trash2, Shield, Sparkle, Globe, AlertTriangle, Check, BookOpen, MessageCircle, X } from "lucide-react";
+import { Letter } from "../types";
+import { Plus, Trash2, Shield, Sparkle, Globe, AlertTriangle, Check, BookOpen, MessageCircle, X, Mail, Send } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface AdminPanelProps {
   characters: Character[];
+  letters: Letter[];
   onCreateCharacter: (charData: Omit<Character, "id" | "heartsCount" | "createdAt">) => Promise<void>;
   onDeleteCharacter: (id: string) => Promise<void>;
+  onReplyLetter: (id: string, reply: string) => Promise<void>;
+  onResetCharacterHearts: (id: string) => Promise<void>;
+  onResetAllCharacterHearts: () => Promise<void>;
 }
 
 const DEFAULT_CATEGORIES = [
@@ -16,7 +21,7 @@ const DEFAULT_CATEGORIES = [
   "Boy phố", "Tổng tài", "Cún con nuôi vợ từ bé", "Chiếm hữu"
 ];
 
-export default function AdminPanel({ characters, onCreateCharacter, onDeleteCharacter }: AdminPanelProps) {
+export default function AdminPanel({ characters, letters, onCreateCharacter, onDeleteCharacter, onReplyLetter, onResetCharacterHearts, onResetAllCharacterHearts }: AdminPanelProps) {
   const [name, setName] = useState("");
   const [categories, setCategories] = useState<string[]>(() => {
     const fromChars = characters.flatMap((c) => c.categories || []);
@@ -31,6 +36,10 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
+
+  const [replyLetterId, setReplyLetterId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const [isReplying, setIsReplying] = useState(false);
 
   const handleCategoryToggle = (cat: string) => {
     setSelectedCats((prev) =>
@@ -81,10 +90,28 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
     }
   };
 
+  const handleReplySubmit = async (e: React.FormEvent, letterId: string) => {
+    e.preventDefault();
+    if (!replyContent.trim()) return;
+
+    setIsReplying(true);
+    try {
+      await onReplyLetter(letterId, replyContent.trim());
+      setReplyLetterId(null);
+      setReplyContent("");
+      setSuccessMsg("Đã trả lời thư thành công!");
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsReplying(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-6">
       <div className="text-center mb-8">
-        <span className="px-4 py-1.5 bg-pink-50 dark:bg-stone-900 text-pink-500 dark:text-pink-300 border border-pink-100 dark:border-stone-800 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 inline-block shadow-xs animate-pulse">
+        <span className="px-4 py-1.5 bg-primary-50 dark:bg-stone-900 text-primary-500 dark:text-primary-300 border border-primary-100 dark:border-stone-800 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 inline-block shadow-xs animate-pulse">
           Bảng Quản Trị Viên
         </span>
         <h2 className="text-3xl font-bold font-serif text-slate-800 dark:text-stone-100">
@@ -97,9 +124,9 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Creation Form */}
-        <div className="lg:col-span-7 bg-pink-50/15 dark:bg-stone-900 border border-pink-100 dark:border-stone-800 rounded-3xl p-6 shadow-md">
-          <h3 className="text-lg font-bold font-serif text-slate-800 dark:text-stone-200 mb-4 flex items-center gap-1.5 border-b border-pink-100 dark:border-stone-800 pb-2">
-            <Plus className="w-5 h-5 text-pink-500" />
+        <div className="lg:col-span-7 bg-primary-50/15 dark:bg-stone-900 border border-primary-100 dark:border-stone-800 rounded-3xl p-6 shadow-md">
+          <h3 className="text-lg font-bold font-serif text-slate-800 dark:text-stone-200 mb-4 flex items-center gap-1.5 border-b border-primary-100 dark:border-stone-800 pb-2">
+            <Plus className="w-5 h-5 text-primary-500" />
             Tạo Nhân Vật Mới
           </h3>
 
@@ -120,7 +147,7 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-300 transition"
+                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition"
               />
             </div>
 
@@ -148,7 +175,7 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                 </button>
               </div>
 
-              <div className="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto p-2.5 border border-pink-100 dark:border-stone-800 rounded-xl bg-slate-50/50 dark:bg-stone-950/20 custom-scrollbar">
+              <div className="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto p-2.5 border border-primary-100 dark:border-stone-800 rounded-xl bg-slate-50/50 dark:bg-stone-950/20 custom-scrollbar">
                 {categories.map((cat) => {
                   const isChecked = selectedCats.includes(cat);
                   return (
@@ -158,8 +185,8 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                       onClick={() => handleCategoryToggle(cat)}
                       className={`px-3 py-1 text-xs rounded-full border transition flex items-center gap-1 cursor-pointer select-none ${
                         isChecked
-                          ? "bg-pink-400 border-pink-400 text-white font-semibold"
-                          : "bg-white dark:bg-stone-900 border-slate-200 dark:border-stone-700 text-slate-600 dark:text-stone-400 hover:bg-pink-50/50"
+                          ? "bg-primary-400 border-primary-400 text-white font-semibold"
+                          : "bg-white dark:bg-stone-900 border-slate-200 dark:border-stone-700 text-slate-600 dark:text-stone-400 hover:bg-primary-50/50"
                       }`}
                     >
                       {isChecked && <Check className="w-3 h-3" />}
@@ -180,7 +207,7 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                 onChange={(e) => setBackstory(e.target.value)}
                 required
                 rows={3}
-                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-300 transition resize-none custom-scrollbar"
+                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition resize-none custom-scrollbar"
               />
             </div>
 
@@ -194,7 +221,7 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                 value={openingMessage}
                 onChange={(e) => setOpeningMessage(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-300 transition"
+                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition"
               />
             </div>
 
@@ -209,14 +236,14 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                 value={chatLink}
                 onChange={(e) => setChatLink(e.target.value)}
                 required
-                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-300 transition"
+                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting || !name || selectedCats.length === 0 || !backstory || !openingMessage || !chatLink}
-              className="w-full py-3 bg-pink-400 hover:bg-pink-500 disabled:opacity-50 text-white font-bold rounded-2xl shadow-sm transition cursor-pointer flex items-center justify-center gap-2 text-sm"
+              className="w-full py-3 bg-primary-400 hover:bg-primary-500 disabled:opacity-50 text-white font-bold rounded-2xl shadow-sm transition cursor-pointer flex items-center justify-center gap-2 text-sm"
               id="btn-create-character"
             >
               <Plus className="w-4 h-4" />
@@ -227,10 +254,21 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
 
         {/* Existing Characters List for Management */}
         <div className="lg:col-span-5 bg-sky-50/15 dark:bg-stone-900 border border-sky-100 dark:border-stone-800 rounded-3xl p-6 shadow-md">
-          <h3 className="text-lg font-bold font-serif text-slate-800 dark:text-stone-200 mb-4 flex items-center gap-1.5 border-b border-sky-100 dark:border-stone-800 pb-2">
-            <Trash2 className="w-5 h-5 text-red-500" />
-            Danh Sách Nhân Vật ({characters.length})
-          </h3>
+          <div className="flex items-center justify-between border-b border-sky-100 dark:border-stone-800 pb-2 mb-4">
+            <h3 className="text-lg font-bold font-serif text-slate-800 dark:text-stone-200 flex items-center gap-1.5">
+              <Trash2 className="w-5 h-5 text-red-500" />
+              Danh Sách Nhân Vật ({characters.length})
+            </h3>
+            {characters.length > 0 && (
+              <button
+                onClick={onResetAllCharacterHearts}
+                className="px-2 py-1 bg-amber-100 hover:bg-amber-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-amber-700 dark:text-amber-500 text-xs font-bold rounded-lg transition flex items-center gap-1"
+                title="Reset toàn bộ tim về 0"
+              >
+                <span className="text-xs">🔄</span> Reset All
+              </button>
+            )}
+          </div>
 
           {characters.length === 0 ? (
             <div className="p-12 text-center bg-slate-50 dark:bg-stone-950/20 border border-dashed border-slate-200 dark:border-stone-800 rounded-2xl">
@@ -247,7 +285,7 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                   className="flex items-center justify-between p-3.5 bg-white dark:bg-stone-950/40 border border-sky-100/50 dark:border-stone-800 rounded-2xl hover:bg-sky-50/30 transition duration-150"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-pink-50 dark:bg-pink-950/40 flex items-center justify-center text-lg">
+                    <div className="w-8 h-8 rounded bg-primary-50 dark:bg-primary-950/40 flex items-center justify-center text-lg">
                       👤
                     </div>
                     <div>
@@ -257,23 +295,119 @@ export default function AdminPanel({ characters, onCreateCharacter, onDeleteChar
                       <p className="text-[10px] text-slate-500 dark:text-stone-500 truncate w-32">
                         {char.categories.join(", ")}
                       </p>
+                      <p className="text-[10px] text-primary-500 font-bold mt-0.5">
+                        💖 {char.heartsCount} tim
+                      </p>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setCharacterToDelete(char)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 text-stone-400 hover:text-red-500 dark:text-stone-600 transition cursor-pointer"
-                    title="Xóa nhân vật"
-                    id={`btn-delete-${char.id}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onResetCharacterHearts(char.id)}
+                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-stone-800 text-stone-400 hover:text-amber-500 dark:text-stone-600 transition cursor-pointer"
+                      title="Reset độ thân mật (về 0)"
+                    >
+                      <span className="text-sm">🔄</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCharacterToDelete(char)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 text-stone-400 hover:text-red-500 dark:text-stone-600 transition cursor-pointer"
+                      title="Xóa nhân vật"
+                      id={`btn-delete-${char.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
+
+      {/* Letters Management Section */}
+      <div className="mt-8 bg-amber-50/15 dark:bg-stone-900 border border-amber-100 dark:border-stone-800 rounded-3xl p-6 shadow-md">
+        <h3 className="text-lg font-bold font-serif text-slate-800 dark:text-stone-200 mb-4 flex items-center gap-1.5 border-b border-amber-100 dark:border-stone-800 pb-2">
+          <Mail className="w-5 h-5 text-amber-500" />
+          Hộp Thư Độc Giả ({letters.length})
+        </h3>
+        
+        {letters.length === 0 ? (
+          <div className="p-12 text-center bg-slate-50 dark:bg-stone-950/20 border border-dashed border-slate-200 dark:border-stone-800 rounded-2xl">
+            <span className="text-3xl block mb-2">📭</span>
+            <p className="text-slate-400 dark:text-stone-500 text-xs italic">
+              Chưa có thư nào được gửi đến.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            {letters.map((letter) => (
+              <div key={letter.id} className="bg-white dark:bg-stone-950/40 p-4 border border-amber-100/50 dark:border-stone-800 rounded-2xl flex flex-col">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-bold text-slate-800 dark:text-stone-300">
+                    👤 {letter.author}
+                  </span>
+                  <span className="text-[9px] text-slate-450 dark:text-stone-500">
+                    {new Date(letter.createdAt).toLocaleDateString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-700 dark:text-stone-200 mb-3 font-serif flex-1">
+                  {letter.content}
+                </p>
+
+                {letter.adminReply ? (
+                  <div className="mt-2 p-3 bg-primary-50/50 dark:bg-stone-900 rounded-xl border border-primary-100 dark:border-stone-800">
+                    <span className="text-[10px] font-bold text-primary-500 mb-1 block">👑 Admin đã trả lời:</span>
+                    <p className="text-xs text-slate-700 dark:text-stone-300 italic">{letter.adminReply}</p>
+                  </div>
+                ) : replyLetterId === letter.id ? (
+                  <form onSubmit={(e) => handleReplySubmit(e, letter.id)} className="mt-2">
+                    <textarea
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      placeholder="Nhập câu trả lời..."
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition resize-none custom-scrollbar mb-2"
+                      rows={2}
+                      required
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setReplyLetterId(null); setReplyContent(""); }}
+                        className="px-3 py-1.5 text-[10px] font-semibold text-slate-600 dark:text-stone-400 hover:bg-slate-100 dark:hover:bg-stone-800 rounded-lg transition"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isReplying || !replyContent.trim()}
+                        className="px-3 py-1.5 text-[10px] font-bold text-white bg-primary-500 hover:bg-primary-600 disabled:opacity-50 rounded-lg transition flex items-center gap-1 shadow-sm"
+                      >
+                        <Send className="w-3 h-3" />
+                        Gửi Trả Lời
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="mt-2 pt-3 border-t border-slate-100 dark:border-stone-800 flex justify-end">
+                    <button
+                      onClick={() => setReplyLetterId(letter.id)}
+                      className="text-[10px] font-bold text-primary-500 hover:text-primary-600 bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/20 dark:hover:bg-primary-950/40 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      Trả lời thư
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
