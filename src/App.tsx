@@ -15,12 +15,11 @@ import EmotionTree from "./components/EmotionTree";
 import LanternSky from "./components/LanternSky";
 import WeatherEffects, { WeatherMode } from "./components/WeatherEffects";
 import DailyTarot from "./components/DailyTarot";
-import TimeCapsule from "./components/TimeCapsule";
 import TriviaQuiz from "./components/TriviaQuiz";
 import { Award, RotateCw, Mail, FolderOpen, UserCheck, Moon, Sun, Shield, ShieldCheck, Sparkles, Bell, X, Palette, Star, CloudRain, HelpCircle, Hourglass, Smile } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-type ActiveTab = "characters" | "rankings" | "gacha" | "letters" | "genres" | "lanterns" | "tarot" | "timecapsule" | "quiz" | "admin";
+type ActiveTab = "characters" | "rankings" | "gacha" | "letters" | "genres" | "lanterns" | "tarot" | "quiz" | "admin";
 
 export default function App() {
   const [isUnlocked, setIsUnlocked] = useState(() => {
@@ -520,7 +519,7 @@ export default function App() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
             {/* Item 1: BXH (Rankings) */}
             <motion.div
               whileHover={{ y: -4, scale: 1.02 }}
@@ -647,25 +646,7 @@ export default function App() {
               <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">🔮</div>
             </motion.div>
 
-            {/* Item 8: HỘP THƯ THỜI GIAN (Time Capsule) */}
-            <motion.div
-              whileHover={{ y: -4, scale: 1.02 }}
-              onClick={() => setActiveTab("timecapsule")}
-              className={`p-6 rounded-3xl border cursor-pointer flex flex-col justify-between transition-all relative overflow-hidden ${
-                activeTab === "timecapsule"
-                  ? "bg-teal-600 dark:bg-teal-500 border-teal-600 text-white shadow-md"
-                  : "bg-teal-50 dark:bg-stone-900 border-teal-200/60 dark:border-stone-800 text-teal-700 dark:text-teal-300 hover:border-teal-400"
-              }`}
-            >
-              <div className="text-3xl mb-4">⏳</div>
-              <div>
-                <h3 className="font-bold text-sm font-serif">Hộp Thư</h3>
-                <p className="text-[10px] opacity-75 mt-0.5 font-medium">Gửi tương lai</p>
-              </div>
-              <div className="absolute -right-2 -bottom-2 text-6xl opacity-10 pointer-events-none select-none">⏳</div>
-            </motion.div>
-
-            {/* Item 9: ĐỐ VUI (Quiz) */}
+            {/* Item 8: ĐỐ VUI (Quiz) */}
             <motion.div
               whileHover={{ y: -4, scale: 1.02 }}
               onClick={() => setActiveTab("quiz")}
@@ -705,26 +686,6 @@ export default function App() {
                   </p>
                 </div>
                 <DailyTarot />
-              </motion.div>
-            )}
-
-            {activeTab === "timecapsule" && (
-              <motion.div
-                key="tab-timecapsule"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.25 }}
-              >
-                <div className="mb-4 border-b border-stone-100 dark:border-stone-800 pb-3 px-1">
-                  <h3 className="text-xl font-bold font-serif text-stone-800 dark:text-stone-100">
-                    Hộp Thư Thời Gian
-                  </h3>
-                  <p className="text-xs text-stone-400 dark:text-stone-500">
-                    Cất giấu những dòng cảm xúc tâm sự gửi cho tương lai của chính mình
-                  </p>
-                </div>
-                <TimeCapsule />
               </motion.div>
             )}
 
