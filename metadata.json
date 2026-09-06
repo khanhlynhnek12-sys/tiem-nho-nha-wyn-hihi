@@ -1,0 +1,8 @@
+{
+  "name": "Tiệm Nhỏ Nhà Wyn",
+  "description": "Website Tiệm Nhỏ Nhà Wyn - Khám phá nhân vật, quay gacha, gửi thư đẹp mắt, xem bảng xếp hạng và các thể loại hấp dẫn",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
