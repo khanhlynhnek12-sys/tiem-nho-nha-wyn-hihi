@@ -159,6 +159,7 @@ export default function App() {
           chatLink: data.chatLink || "",
           heartsCount: data.heartsCount || 0,
           createdAt: data.createdAt || new Date().toISOString(),
+          imageUrl: data.imageUrl || "",
         });
       });
       setCharacters(charsData);

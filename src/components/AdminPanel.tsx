@@ -33,6 +33,7 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
   const [backstory, setBackstory] = useState("");
   const [openingMessage, setOpeningMessage] = useState("");
   const [chatLink, setChatLink] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
@@ -72,7 +73,8 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
         categories: selectedCats,
         backstory: backstory.trim(),
         openingMessage: openingMessage.trim(),
-        chatLink: chatLink.trim()
+        chatLink: chatLink.trim(),
+        imageUrl: imageUrl.trim() || undefined
       });
 
       // Reset form
@@ -81,6 +83,7 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
       setBackstory("");
       setOpeningMessage("");
       setChatLink("");
+      setImageUrl("");
       setSuccessMsg("Thêm nhân vật mới thành công! Hệ thống đã gửi thông báo tự động 🎉");
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err) {
@@ -240,6 +243,20 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
               />
             </div>
 
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-stone-400 mb-1 flex items-center gap-1">
+                <Globe className="w-3.5 h-3.5 text-slate-400" />
+                Liên kết ảnh nhân vật (Hình ảnh đại diện - Tùy chọn)
+              </label>
+              <input
+                type="url"
+                placeholder="https://example.com/character-image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting || !name || selectedCats.length === 0 || !backstory || !openingMessage || !chatLink}
@@ -285,8 +302,12 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
                   className="flex items-center justify-between p-3.5 bg-white dark:bg-stone-950/40 border border-sky-100/50 dark:border-stone-800 rounded-2xl hover:bg-sky-50/30 transition duration-150"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-primary-50 dark:bg-primary-950/40 flex items-center justify-center text-lg">
-                      👤
+                    <div className="w-8 h-8 rounded bg-primary-50 dark:bg-primary-950/40 flex items-center justify-center text-lg overflow-hidden border border-slate-100 dark:border-stone-800 shrink-0">
+                      {char.imageUrl ? (
+                        <img src={char.imageUrl} alt={char.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                      ) : (
+                        "👤"
+                      )}
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-800 dark:text-stone-200">
