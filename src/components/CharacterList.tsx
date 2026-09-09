@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Character } from "../types";
+import { SafeAvatar } from "./SafeAvatar";
 import { Search, Heart, ExternalLink, MessageCircle, Star, X, BookOpen, Gift } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -133,9 +134,7 @@ export default function CharacterList({
                     {/* Header of character */}
                     <div className="flex justify-between items-start gap-3 mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-sky-50 dark:bg-stone-800 rounded-2xl flex items-center justify-center text-2xl border border-sky-100 dark:border-stone-700 text-sky-500 shrink-0 shadow-sm">
-                          👤
-                        </div>
+                        <SafeAvatar imageUrl={char.imageUrl} name={char.name} sizeClass="w-12 h-12 text-2xl" />
                         <div>
                           <h3 className="text-lg font-bold text-slate-800 dark:text-stone-100 font-serif">
                             {char.name}
@@ -311,9 +310,7 @@ export default function CharacterList({
               </button>
 
               <div className="flex items-center gap-4 mb-6 pr-8">
-                <div className="w-16 h-16 bg-sky-50 dark:bg-stone-800 rounded-2xl flex items-center justify-center text-3xl border border-sky-100 dark:border-stone-700 text-sky-500 shrink-0 shadow-sm">
-                  👤
-                </div>
+                <SafeAvatar imageUrl={activeCharacter.imageUrl} name={activeCharacter.name} sizeClass="w-16 h-16 text-3xl" />
                 <div>
                   <h3 className="text-xl font-bold text-slate-800 dark:text-stone-100 font-serif">
                     {activeCharacter.name}

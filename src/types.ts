@@ -7,6 +7,7 @@ export interface Character {
   chatLink: string;
   heartsCount: number;
   createdAt: string;
+  imageUrl?: string;
   bankBalance?: number;
 }
 

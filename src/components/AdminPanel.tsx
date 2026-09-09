@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Character } from "../types";
+import { SafeAvatar } from "./SafeAvatar";
 import { Letter } from "../types";
 import { Plus, Trash2, Shield, Sparkle, Globe, AlertTriangle, Check, BookOpen, MessageCircle, X, Mail, Send } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -21,6 +22,49 @@ const DEFAULT_CATEGORIES = [
   "Boy phố", "Tổng tài", "Cún con nuôi vợ từ bé", "Chiếm hữu"
 ];
 
+function resizeImageToBase64(file: File, maxWidth = 300, maxHeight = 300): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          resolve(dataUrl);
+        } else {
+          resolve(event.target?.result as string);
+        }
+      };
+      img.onerror = () => {
+        reject(new Error("Không thể tải hình ảnh."));
+      };
+    };
+    reader.onerror = (error) => reject(error);
+  });
+}
+
 export default function AdminPanel({ characters, letters, onCreateCharacter, onDeleteCharacter, onReplyLetter, onResetCharacterHearts, onResetAllCharacterHearts }: AdminPanelProps) {
   const [name, setName] = useState("");
   const [categories, setCategories] = useState<string[]>(() => {
@@ -33,6 +77,9 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
   const [backstory, setBackstory] = useState("");
   const [openingMessage, setOpeningMessage] = useState("");
   const [chatLink, setChatLink] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [dragActive, setDragActive] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
@@ -45,6 +92,47 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
     setSelectedCats((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const processFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng tải lên một tệp hình ảnh hợp lệ (JPG, PNG, GIF, WEBP)!");
+      return;
+    }
+    try {
+      const base64 = await resizeImageToBase64(file);
+      setImageUrl(base64);
+      setPreviewUrl(base64);
+    } catch (err) {
+      console.error(err);
+      alert("Đã xảy ra lỗi khi nén và xử lý hình ảnh.");
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      await processFile(e.target.files[0]);
+    }
   };
 
   const handleAddCustomCategory = (e: React.MouseEvent) => {
@@ -73,6 +161,7 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
         backstory: backstory.trim(),
         openingMessage: openingMessage.trim(),
         chatLink: chatLink.trim(),
+        imageUrl: imageUrl.trim() || undefined
       });
 
       // Reset form
@@ -81,6 +170,8 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
       setBackstory("");
       setOpeningMessage("");
       setChatLink("");
+      setImageUrl("");
+      setPreviewUrl(null);
       setSuccessMsg("Thêm nhân vật mới thành công! Hệ thống đã gửi thông báo tự động 🎉");
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err) {
@@ -136,6 +227,68 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
                 {successMsg}
               </div>
             )}
+
+            {/* Drag and Drop Image Box */}
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-stone-400">
+                Hình ảnh nhân vật (Kéo & Thả hoặc Nhấp để chọn ảnh từ máy)
+              </label>
+              <div
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                className={`relative border-2 border-dashed rounded-2xl p-4 transition flex flex-col items-center justify-center cursor-pointer min-h-[120px] ${
+                  dragActive
+                    ? "border-primary-400 bg-primary-50/50 dark:bg-primary-950/20"
+                    : "border-slate-200 dark:border-stone-700 hover:border-primary-300 bg-white/40 dark:bg-stone-850/20"
+                }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleFileChange}
+                />
+                
+                {previewUrl || imageUrl ? (
+                  <div className="flex items-center gap-4 w-full px-2">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-100 dark:border-stone-800 bg-white dark:bg-stone-900 flex-shrink-0">
+                      <img src={previewUrl || imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-800 dark:text-stone-200 truncate">
+                        Đã tải ảnh nhân vật thành công!
+                      </p>
+                      <p className="text-[10px] text-slate-400 dark:text-stone-500 truncate mt-0.5">
+                        Dữ liệu: {imageUrl.substring(0, 45)}...
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setImageUrl("");
+                          setPreviewUrl(null);
+                        }}
+                        className="text-[11px] font-semibold text-red-500 hover:text-red-600 mt-1 cursor-pointer block"
+                      >
+                        Xóa ảnh này
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center pointer-events-none">
+                    <span className="text-2xl block mb-1">🖼️</span>
+                    <p className="text-xs font-medium text-slate-600 dark:text-stone-300">
+                      Kéo thả ảnh của nhân vật vào đây hoặc nhấp để chọn
+                    </p>
+                    <p className="text-[10px] text-slate-400 dark:text-stone-500 mt-1">
+                      Hỗ trợ JPG, PNG, GIF, WEBP (Tự động nén & lưu trực tiếp)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-500 dark:text-stone-400 mb-1">
@@ -240,6 +393,24 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
               />
             </div>
 
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-stone-400 mb-1 flex items-center gap-1">
+                <Globe className="w-3.5 h-3.5 text-slate-400" />
+                Hoặc nhập liên kết ảnh nhân vật (Nếu không kéo thả file ở trên)
+              </label>
+              <input
+                type="url"
+                placeholder={imageUrl.startsWith("data:") ? "Đã sử dụng tệp ảnh tải lên từ máy" : "https://example.com/character-image.jpg"}
+                value={imageUrl.startsWith("data:") ? "" : imageUrl}
+                onChange={(e) => {
+                  setImageUrl(e.target.value);
+                  setPreviewUrl(null);
+                }}
+                disabled={imageUrl.startsWith("data:")}
+                className="w-full px-3 py-2.5 bg-white dark:bg-stone-800/40 border border-slate-200 dark:border-stone-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting || !name || selectedCats.length === 0 || !backstory || !openingMessage || !chatLink}
@@ -285,9 +456,7 @@ export default function AdminPanel({ characters, letters, onCreateCharacter, onD
                   className="flex items-center justify-between p-3.5 bg-white dark:bg-stone-950/40 border border-sky-100/50 dark:border-stone-800 rounded-2xl hover:bg-sky-50/30 transition duration-150"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-primary-50 dark:bg-primary-950/40 flex items-center justify-center text-lg shrink-0">
-                      👤
-                    </div>
+                    <SafeAvatar imageUrl={char.imageUrl} name={char.name} sizeClass="w-8 h-8 text-sm" roundedClass="rounded-lg" />
                     <div>
                       <h4 className="text-xs font-bold text-slate-800 dark:text-stone-200">
                         {char.name}
